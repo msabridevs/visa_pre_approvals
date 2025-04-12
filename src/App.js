@@ -13,6 +13,15 @@ export default function VisaAppPage() {
   const [trackingStatus, setTrackingStatus] = useState(null);
   const [trackingNotes, setTrackingNotes] = useState(null);
 
+  const arabicToGerman = {
+    'الطلب قيد الفحص. رجاء التحقق لاحقاً':
+      'Der Antrag wird geprüft. Bitte später erneut überprüfen.',
+    'وردت الموافقة. رجاء إحضار جواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان':
+      'Genehmigung erteilt. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen persönlich oder senden Sie sie per Einschreiben mit einem frankierten Rückumschlag und Ihrer Adresse.',
+    'عدم موافقة': 'Nicht genehmigt.',
+    'مطلوب إستيفاء بيانات': 'Weitere Informationen erforderlich.',
+  };
+
   const generateRandomBarcode = async () => {
     const { data } = await supabase.from('visa_requests').select('barcode');
     const existing = new Set((data || []).map(d => d.barcode));
@@ -60,9 +69,13 @@ export default function VisaAppPage() {
       .maybeSingle();
 
     if (!data) {
-      setTrackingStatus('لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب');
+      setTrackingStatus(
+        'لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب\nIhr Antrag wurde noch nicht empfangen. Bitte überprüfen Sie den Versand.'
+      );
     } else {
-      setTrackingStatus(data.status);
+      const arabic = data.status;
+      const german = arabicToGerman[arabic] || '';
+      setTrackingStatus(`${arabic}\n${german}`);
       setTrackingNotes(data.notes);
     }
   };
@@ -87,29 +100,29 @@ export default function VisaAppPage() {
         {/* Title */}
         <div className="text-center space-y-2">
           <div dir="rtl" className="text-5xl font-bold text-gray-800">نموذج طلب تأشيرة</div>
-          <div dir="ltr" className="text-xl text-gray-600">Visumantragsformular</div>
+          <div dir="rtl" className="text-xl text-gray-600">Visumantragsformular</div>
         </div>
 
-        {/* Download section */}
+        {/* Download Section */}
         <div className="space-y-4 text-center">
           <div className="text-2xl space-y-1">
             <div dir="rtl">تحميل النموذج مختوم برقم الطلب الخاص بك: <strong>#{barcode}</strong></div>
-            <div dir="ltr" className="text-lg text-gray-600">Formular mit Ihrer Antragsnummer herunterladen</div>
+            <div dir="rtl" className="text-lg text-gray-600">Formular mit Ihrer Antragsnummer herunterladen</div>
           </div>
           <button
             onClick={stampAndDownloadPDF}
             className="bg-blue-600 text-white text-xl px-6 py-3 rounded-lg hover:bg-blue-700"
           >
             <div dir="rtl">تحميل النموذج</div>
-            <div dir="ltr" className="text-base text-gray-300">Formular herunterladen</div>
+            <div dir="rtl" className="text-base text-gray-300">Formular herunterladen</div>
           </button>
         </div>
 
-        {/* Tracking section */}
+        {/* Tracking Section */}
         <div className="space-y-6 border-t pt-6">
           <div className="text-2xl font-semibold space-y-1">
             <div dir="rtl">لتتبع حالة الطلب، الرجاء إدخال رقم الطلب (المكون من أربعة أعداد) بدون رمز الشباك</div>
-            <div dir="ltr" className="text-lg text-gray-600">Um den Antragsstatus zu verfolgen, geben Sie bitte die vierstellige Antragsnummer ohne das #-Zeichen ein</div>
+            <div dir="rtl" className="text-lg text-gray-600">Um den Antragsstatus zu verfolgen, geben Sie bitte die vierstellige Antragsnummer ohne das #-Zeichen ein</div>
           </div>
           <input
             value={trackInput}
@@ -118,7 +131,7 @@ export default function VisaAppPage() {
             className="w-full border border-gray-300 px-4 py-4 rounded text-right text-2xl"
             dir="rtl"
           />
-          <div className="text-sm text-gray-500 text-left pl-2" dir="ltr">
+          <div className="text-sm text-gray-500 text-right pr-2" dir="rtl">
             Barcode-Nummer hier eingeben
           </div>
 
@@ -128,17 +141,21 @@ export default function VisaAppPage() {
               className="bg-green-600 text-white text-xl px-6 py-3 rounded-lg hover:bg-green-700"
             >
               <div dir="rtl">تتبع الحالة</div>
-              <div dir="ltr" className="text-base text-gray-300">Status verfolgen</div>
+              <div dir="rtl" className="text-base text-gray-300">Status verfolgen</div>
             </button>
           </div>
 
           {trackingStatus && (
             <div className="mt-6 text-3xl font-bold text-center space-y-4">
-              <p className={getStatusColor(trackingStatus)}>{trackingStatus}</p>
+              {trackingStatus.split('\n').map((line, idx) => (
+                <p key={idx} className={getStatusColor(trackingStatus)} dir="rtl">
+                  {line}
+                </p>
+              ))}
               {trackingNotes && (
                 <div className="text-gray-700 text-2xl space-y-2">
                   <div dir="rtl">ملاحظات: {trackingNotes}</div>
-                  <div dir="ltr" className="text-lg text-gray-600">Hinweise: {trackingNotes}</div>
+                  <div dir="rtl">Hinweise: {trackingNotes}</div>
                 </div>
               )}
             </div>
