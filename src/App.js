@@ -16,7 +16,7 @@ export default function VisaAppPage() {
   const arabicToGerman = {
     'الطلب قيد الفحص. رجاء التحقق لاحقاً':
       'Der Antrag wird geprüft. Bitte später erneut überprüfen.',
-    'وردت الموافقة. رجاء إحضار جواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان':
+    'وردت الموافقة. رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان':
       'Genehmigung erteilt. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen persönlich oder senden Sie sie per Einschreiben mit einem frankierten Rückumschlag und Ihrer Adresse.',
     'عدم موافقة': 'Nicht genehmigt.',
     'مطلوب إستيفاء بيانات': 'Weitere Informationen erforderlich.',
