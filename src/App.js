@@ -106,7 +106,7 @@ export default function VisaAppPage() {
         {/* Download Section */}
         <div className="space-y-4">
           <div className="text-2xl space-y-1">
-            <div dir="ltr">تحميل النموذج مختوم برقم الطلب الخاص بك: <strong>#{barcode}</strong></div>
+            <div dir="ltr">تحميل النموذج برقم الطلب الخاص بك: <strong>#{barcode}</strong></div>
             <div dir="ltr" className="text-lg text-gray-600">Formular mit Ihrer Antragsnummer herunterladen</div>
           </div>
           <button
@@ -121,13 +121,13 @@ export default function VisaAppPage() {
         {/* Tracking Section */}
         <div className="space-y-6 border-t pt-6">
           <div className="text-2xl font-semibold space-y-1">
-            <div dir="ltr">لتتبع حالة الطلب، الرجاء إدخال رقم الطلب (المكون من أربعة أعداد) بدون رمز الشباك</div>
+            <div dir="ltr">لتتبع حالة الطلب، الرجاء إدخال رقم الطلب (المكون من أربعة أرقام) بدون رمز الشباك</div>
             <div dir="ltr" className="text-lg text-gray-600">Um den Antragsstatus zu verfolgen, geben Sie bitte die vierstellige Antragsnummer ohne das #-Zeichen ein</div>
           </div>
           <input
             value={trackInput}
             onChange={e => setTrackInput(e.target.value)}
-            placeholder="أدخل رقم الباركود هنا"
+            placeholder="أدخل رقم الطلب هنا"
             className="w-full border border-gray-300 px-4 py-4 rounded text-left text-2xl"
             dir="ltr"
           />
