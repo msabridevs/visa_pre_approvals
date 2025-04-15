@@ -14,12 +14,14 @@ export default function VisaAppPage() {
   const [trackingNotes, setTrackingNotes] = useState(null);
 
   const arabicToGerman = {
-    'الطلب قيد الفحص. رجاء التحقق لاحقاً':
-      'Der Antrag wird geprüft. Bitte später erneut überprüfen.',
+    'جارى مراجعة الطلب. رجاء التحقق لاحقاً':
+      'Der Antrag wird geprüft. Bitte überprüfen Sie später erneut.',
     'وردت الموافقة. رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان':
-      'Genehmigung erteilt. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen persönlich oder senden Sie sie per Einschreiben mit einem frankierten Rückumschlag und Ihrer Adresse.',
-    'عدم موافقة': 'Nicht genehmigt.',
-    'مطلوب إستيفاء بيانات': 'Weitere Informationen erforderlich.',
+      'Die Genehmigung ist eingegangen. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen innerhalb der festgelegten Fristen oder senden Sie sie per Einschreiben mit einem ausreichend frankierten Rückumschlag und Ihrer Adresse.',
+    'لم ترد الموافقة':
+      'Die Genehmigung wurde nicht erteilt.',
+    'مطلوب إستيفاء':
+      'Ergänzende Angaben erforderlich.',
   };
 
   const generateRandomBarcode = async () => {
@@ -86,9 +88,9 @@ export default function VisaAppPage() {
 
   const getStatusColor = (status) => {
     if (!status) return '';
-    if (status.includes('الطلب قيد الفحص')) return 'text-yellow-500';
+    if (status.includes('جارى مراجعة الطلب')) return 'text-yellow-500';
     if (status.includes('وردت الموافقة')) return 'text-green-600';
-    if (status.includes('عدم موافقة')) return 'text-red-600';
+    if (status.includes('لم ترد الموافقة')) return 'text-red-600';
     if (status.includes('مطلوب إستيفاء')) return 'text-orange-500';
     return 'text-blue-700';
   };
