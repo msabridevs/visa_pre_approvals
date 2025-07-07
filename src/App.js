@@ -48,7 +48,7 @@ export default function VisaAppPage() {
     page.drawText(`Application #: ${barcode}`, {
       x: 350,
       y: 740,
-      size: 14,
+      size: 16,
       font,
       color: rgb(0, 0, 0),
     });
@@ -96,74 +96,173 @@ export default function VisaAppPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-2xl w-full p-8 bg-white shadow rounded-lg space-y-10 text-left">
+    <>
+      {/* Google Fonts for Arabic/Latin pairing */}
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet" />
+      <style>{`
+        .visa-main-font {
+          font-family: 'Cairo', 'Tajawal', 'Segoe UI', 'Arial', sans-serif;
+        }
+        .visa-btn {
+          transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          border-radius: 16px;
+          box-shadow: 0 3px 18px #0A5DAB18;
+          outline: none;
+          border: none;
+        }
+        .visa-btn-blue {
+          background: linear-gradient(90deg, #0A5DAB 60%, #36a3e3 100%);
+          color: #fff;
+        }
+        .visa-btn-blue:hover {
+          background: linear-gradient(90deg, #08508e 60%, #2696d1 100%);
+        }
+        .visa-btn-green {
+          background: linear-gradient(90deg, #26A65B 70%, #6de49b 100%);
+          color: #fff;
+        }
+        .visa-btn-green:hover {
+          background: linear-gradient(90deg, #1d7d44 70%, #34b86c 100%);
+        }
+        .visa-section-title {
+          font-size: 2.7rem;
+          font-weight: 900;
+          color: #0A5DAB;
+          margin-bottom: 0.3em;
+          letter-spacing: 0.5px;
+        }
+        .visa-section-sub {
+          font-size: 1.4rem;
+          color: #444;
+          margin-bottom: 0.6em;
+        }
+        .visa-input {
+          width: 100%;
+          font-size: 2.1rem;
+          padding: 0.85em 1.1em;
+          border: 1.5px solid #b6bdd2;
+          border-radius: 14px;
+          background: #f6fafd;
+          color: #1D1D1D;
+          transition: border-color .2s;
+          margin-bottom: 0.25em;
+        }
+        .visa-input:focus {
+          border-color: #0A5DAB;
+          outline: none;
+          background: #fff;
+        }
+        .visa-label {
+          font-size: 1.1rem;
+          color: #888;
+          margin-bottom: 0.2em;
+          display: block;
+        }
+        .visa-status-box {
+          background: #f6faf7;
+          border-radius: 18px;
+          padding: 1.3em 1.5em;
+          box-shadow: 0 2px 14px #26A65B12;
+          margin-top: 2em;
+        }
+        .visa-status-line {
+          font-size: 2.2rem;
+          font-weight: 700;
+        }
+        .visa-note {
+          color: #555;
+          background: #eef0f7;
+          border-radius: 10px;
+          padding: 0.7em 1em;
+          font-size: 1.4rem;
+          margin-top: 1em;
+        }
+        @media (max-width:600px) {
+          .visa-section-title {font-size:2rem}
+          .visa-section-sub {font-size:1.1rem}
+          .visa-input{font-size:1.2rem}
+          .visa-status-line{font-size:1.3rem}
+        }
+      `}</style>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e9f3ff] via-[#f7fafc] to-[#e7f7ec] visa-main-font">
+        <div className="max-w-2xl w-full p-7 md:p-10 bg-white shadow-2xl rounded-2xl space-y-12 text-left">
 
-        {/* Title */}
-        <div className="space-y-2">
-          <div dir="ltr" className="text-5xl font-bold text-gray-800">نموذج طلب تأشيرة</div>
-          <div dir="ltr" className="text-xl text-gray-600">Visumantragsformular</div>
-        </div>
-
-        {/* Download Section */}
-        <div className="space-y-4">
-          <div className="text-2xl space-y-1">
-            <div dir="ltr">تحميل النموذج برقم الطلب الخاص بك: <strong>#{barcode}</strong></div>
-            <div dir="ltr" className="text-lg text-gray-600">Formular mit Ihrer Antragsnummer herunterladen</div>
+          {/* Title */}
+          <div className="mb-3">
+            <div dir="ltr" className="visa-section-title">نموذج طلب تأشيرة</div>
+            <div dir="ltr" className="visa-section-sub">Visumantragsformular</div>
           </div>
-          <button
-            onClick={stampAndDownloadPDF}
-            className="bg-blue-600 text-white text-xl px-6 py-3 rounded-lg hover:bg-blue-700"
-          >
-            <div dir="ltr">تحميل النموذج</div>
-            <div dir="ltr" className="text-base text-gray-300">Formular herunterladen</div>
-          </button>
-        </div>
 
-        {/* Tracking Section */}
-        <div className="space-y-6 border-t pt-6">
-          <div className="text-2xl font-semibold space-y-1">
-            <div dir="ltr">لتتبع حالة الطلب، الرجاء إدخال رقم الطلب (المكون من أربعة أرقام) بدون رمز الشباك</div>
-            <div dir="ltr" className="text-lg text-gray-600">Um den Antragsstatus zu verfolgen, geben Sie bitte die vierstellige Antragsnummer ohne das #-Zeichen ein</div>
-          </div>
-          <input
-            value={trackInput}
-            onChange={e => setTrackInput(e.target.value)}
-            placeholder="أدخل رقم الطلب هنا"
-            className="w-full border border-gray-300 px-4 py-4 rounded text-left text-2xl"
-            dir="ltr"
-          />
-          <div className="text-sm text-gray-500 text-left pl-2" dir="ltr">
-            Barcode-Nummer hier eingeben
-          </div>
-
-          <div className="text-left">
+          {/* Download Section */}
+          <div className="space-y-4">
+            <div className="text-2xl md:text-3xl font-bold text-blue-900">
+              <div dir="ltr">
+                تحميل النموذج برقم الطلب الخاص بك: <span className="text-blue-700">#{barcode}</span>
+              </div>
+              <div dir="ltr" className="text-lg text-blue-400 font-normal">Formular mit Ihrer Antragsnummer herunterladen</div>
+            </div>
             <button
-              onClick={trackStatus}
-              className="bg-green-600 text-white text-xl px-6 py-3 rounded-lg hover:bg-green-700"
+              onClick={stampAndDownloadPDF}
+              className="visa-btn visa-btn-blue text-2xl md:text-2xl px-8 py-4"
+              style={{minWidth:180}}
             >
-              <div dir="ltr">تتبع الحالة</div>
-              <div dir="ltr" className="text-base text-gray-300">Status verfolgen</div>
+              <div dir="ltr" className="font-bold">تحميل النموذج</div>
+              <div dir="ltr" className="text-base text-blue-100 font-normal">Formular herunterladen</div>
             </button>
           </div>
 
-          {trackingStatus && (
-            <div className="mt-6 text-3xl font-bold text-left space-y-4">
-              {trackingStatus.split('\n').map((line, idx) => (
-                <p key={idx} className={getStatusColor(trackingStatus)} dir="ltr">
-                  {line}
-                </p>
-              ))}
-              {trackingNotes && (
-                <div className="text-gray-700 text-2xl space-y-2">
-                  <div dir="ltr">ملاحظات: {trackingNotes}</div>
-                  <div dir="ltr">Hinweise: {trackingNotes}</div>
-                </div>
-              )}
+          {/* Tracking Section */}
+          <div className="space-y-6 border-t pt-8">
+            <div className="text-2xl md:text-3xl font-bold text-green-800 mb-2">
+              <div dir="ltr" className="mb-1">لتتبع حالة الطلب، الرجاء إدخال رقم الطلب (المكون من أربعة أرقام) بدون رمز الشباك</div>
+              <div dir="ltr" className="text-lg text-green-500 font-normal">Um den Antragsstatus zu verfolgen, geben Sie bitte die vierstellige Antragsnummer ohne das #-Zeichen ein</div>
             </div>
-          )}
+            <label className="visa-label" dir="ltr">رقم الطلب / Antragsnummer</label>
+            <input
+              value={trackInput}
+              onChange={e => setTrackInput(e.target.value)}
+              placeholder="أدخل رقم الطلب هنا"
+              className="visa-input"
+              dir="ltr"
+            />
+            <div className="text-sm text-gray-400 pl-2" dir="ltr">
+              Barcode-Nummer hier eingeben
+            </div>
+            <div>
+              <button
+                onClick={trackStatus}
+                className="visa-btn visa-btn-green text-2xl px-8 py-4"
+                style={{minWidth:180}}
+              >
+                <div dir="ltr" className="font-bold">تتبع الحالة</div>
+                <div dir="ltr" className="text-base text-green-100 font-normal">Status verfolgen</div>
+              </button>
+            </div>
+
+            {trackingStatus && (
+              <div className="visa-status-box">
+                {trackingStatus.split('\n').map((line, idx) => (
+                  <div
+                    key={idx}
+                    className={`visa-status-line ${getStatusColor(trackingStatus)}`}
+                    dir="ltr"
+                  >
+                    {line}
+                  </div>
+                ))}
+                {trackingNotes && (
+                  <div className="visa-note">
+                    <div dir="ltr"><b>ملاحظات:</b> {trackingNotes}</div>
+                    <div dir="ltr"><b>Hinweise:</b> {trackingNotes}</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
