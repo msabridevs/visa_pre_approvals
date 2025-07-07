@@ -2,12 +2,18 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
+// Vercel build fix notes:
+// - Ensure file extensions are .js or .ts, not .jsx or .tsx, if using plain JS
+// - Check for server-side code (window, document, fetch) which must be in `useEffect` or client-only code
+// - Never use await fetch outside useEffect or event handlers
+// - Always check for "window" or "document" existance if used
+
 const supabase = createClient(
   'https://rbsrverouylthjdbrxgd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJic3J2ZXJvdXlsdGhqZGJyeGdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDQ1MTQsImV4cCI6MjA1OTcyMDUxNH0.KckvPMHcEWVHfKVNBRjLZENIsMi3uTXAsmvRXdrH74o'
 );
 
-const statusTranslations = {
+const statusTranslations: Record<string, { de: string; en: string }> = {
   'جارى مراجعة الطلب. رجاء التحقق لاحقاً': {
     de: 'Der Antrag wird geprüft. Bitte überprüfen Sie später erneut.',
     en: 'Application under review. Please check again later.',
@@ -40,7 +46,7 @@ function getAllTranslations(arabicStatus: string) {
     };
   }
   // If compound status (like the default "not received" message with \n)
-  if (arabicStatus.includes('\n')) {
+  if (arabicStatus && arabicStatus.includes('\n')) {
     const lines = arabicStatus.split('\n');
     if (lines.length === 2 && statusTranslations[lines[0]]) {
       return {
@@ -59,23 +65,28 @@ function getAllTranslations(arabicStatus: string) {
 }
 
 export default function VisaAppPage() {
-  const [barcode, setBarcode] = useState(null);
+  const [barcode, setBarcode] = useState<string | null>(null);
   const [trackInput, setTrackInput] = useState('');
-  const [trackingStatus, setTrackingStatus] = useState<{ar: string, de: string, en: string} | null>(null);
-  const [trackingNotes, setTrackingNotes] = useState(null);
+  const [trackingStatus, setTrackingStatus] = useState<{ ar: string; de: string; en: string } | null>(null);
+  const [trackingNotes, setTrackingNotes] = useState<string | null>(null);
 
-  const generateRandomBarcode = async () => {
-    const { data } = await supabase.from('visa_requests').select('barcode');
-    const existing = new Set((data || []).map(d => d.barcode));
-    let code;
-    do {
-      code = Math.floor(1000 + Math.random() * 9000).toString();
-    } while (existing.has(code));
-    setBarcode(code);
-  };
+  useEffect(() => {
+    // Always client-side, so safe for Vercel
+    const generateRandomBarcode = async () => {
+      const { data } = await supabase.from('visa_requests').select('barcode');
+      const existing = new Set((data || []).map((d: any) => d.barcode));
+      let code: string;
+      do {
+        code = Math.floor(1000 + Math.random() * 9000).toString();
+      } while (existing.has(code));
+      setBarcode(code);
+    };
+    generateRandomBarcode();
+  }, []);
 
   const stampAndDownloadPDF = async () => {
     if (!barcode) return;
+    // Only runs client-side, Vercel SSR safe
     const url = '/Visa Application Form.pdf';
     const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer());
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -116,11 +127,7 @@ export default function VisaAppPage() {
     }
   };
 
-  useEffect(() => {
-    generateRandomBarcode();
-  }, []);
-
-  const getStatusColor = (status: {ar: string, de: string, en: string} | null) => {
+  const getStatusColor = (status: { ar: string; de: string; en: string } | null) => {
     if (!status) return '';
     if (status.ar.includes('جارى مراجعة الطلب')) return 'text-yellow-500';
     if (status.ar.includes('وردت الموافقة')) return 'text-green-600';
@@ -240,7 +247,8 @@ export default function VisaAppPage() {
             <button
               onClick={stampAndDownloadPDF}
               className="visa-btn visa-btn-blue text-2xl md:text-2xl px-8 py-4"
-              style={{minWidth:180}}
+              style={{ minWidth: 180 }}
+              type="button"
             >
               <div dir="ltr" className="font-bold">تحميل النموذج</div>
               <div dir="ltr" className="text-base text-blue-100 font-normal">Formular herunterladen</div>
@@ -260,6 +268,8 @@ export default function VisaAppPage() {
               placeholder="أدخل رقم الطلب هنا"
               className="visa-input"
               dir="ltr"
+              type="text"
+              inputMode="numeric"
             />
             <div className="text-sm text-gray-400 pl-2" dir="ltr">
               Barcode-Nummer hier eingeben
@@ -268,7 +278,8 @@ export default function VisaAppPage() {
               <button
                 onClick={trackStatus}
                 className="visa-btn visa-btn-green text-2xl px-8 py-4"
-                style={{minWidth:180}}
+                style={{ minWidth: 180 }}
+                type="button"
               >
                 <div dir="ltr" className="font-bold">تتبع الحالة</div>
                 <div dir="ltr" className="text-base text-green-100 font-normal">Status verfolgen</div>
@@ -281,12 +292,12 @@ export default function VisaAppPage() {
                   {trackingStatus.ar}
                 </div>
                 {trackingStatus.de && (
-                  <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="ltr" style={{fontSize:'1.3rem',marginTop:'0.5em'}}>
+                  <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="ltr" style={{ fontSize: '1.3rem', marginTop: '0.5em' }}>
                     {trackingStatus.de}
                   </div>
                 )}
                 {trackingStatus.en && (
-                  <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="ltr" style={{fontSize:'1.15rem',marginTop:'0.3em', color:'#326b7c'}}>
+                  <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="ltr" style={{ fontSize: '1.15rem', marginTop: '0.3em', color: '#326b7c' }}>
                     {trackingStatus.en}
                   </div>
                 )}
