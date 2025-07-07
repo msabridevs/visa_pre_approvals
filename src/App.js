@@ -7,38 +7,75 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJic3J2ZXJvdXlsdGhqZGJyeGdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDQ1MTQsImV4cCI6MjA1OTcyMDUxNH0.KckvPMHcEWVHfKVNBRjLZENIsMi3uTXAsmvRXdrH74o'
 );
 
+const statusTranslations = {
+  'جارى مراجعة الطلب. رجاء التحقق لاحقاً': {
+    de: 'Der Antrag wird geprüft. Bitte überprüfen Sie später erneut.',
+    en: 'Application under review. Please check again later.',
+  },
+  'وردت الموافقة. رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان': {
+    de: 'Die Genehmigung ist eingegangen. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen innerhalb der festgelegten Fristen oder senden Sie sie per Einschreiben mit einem ausreichend frankierten Rückumschlag und Ihrer Adresse.',
+    en: 'Approval received. Please bring your passport and required documents within the specified deadlines or send them by registered mail with a stamped return envelope and your address.',
+  },
+  'لم ترد الموافقة': {
+    de: 'Die Genehmigung wurde nicht erteilt.',
+    en: 'Approval not granted.',
+  },
+  'مطلوب إستيفاء': {
+    de: 'Ergänzende Angaben erforderlich.',
+    en: 'Additional information required.',
+  },
+  'لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب': {
+    de: 'Ihr Antrag wurde noch nicht empfangen. Bitte überprüfen Sie den Versand.',
+    en: 'Your application has not been received yet. Please check your submission.',
+  },
+};
+
+function getAllTranslations(arabicStatus: string) {
+  // If full match
+  if (statusTranslations[arabicStatus]) {
+    return {
+      ar: arabicStatus,
+      de: statusTranslations[arabicStatus].de,
+      en: statusTranslations[arabicStatus].en,
+    };
+  }
+  // If compound status (like the default "not received" message with \n)
+  if (arabicStatus.includes('\n')) {
+    const lines = arabicStatus.split('\n');
+    if (lines.length === 2 && statusTranslations[lines[0]]) {
+      return {
+        ar: lines[0],
+        de: lines[1],
+        en: statusTranslations[lines[0]].en,
+      };
+    }
+  }
+  // Fallback: Arabic only
+  return {
+    ar: arabicStatus,
+    de: '',
+    en: '',
+  };
+}
+
 export default function VisaAppPage() {
   const [barcode, setBarcode] = useState(null);
   const [trackInput, setTrackInput] = useState('');
-  const [trackingStatus, setTrackingStatus] = useState(null);
+  const [trackingStatus, setTrackingStatus] = useState<{ar: string, de: string, en: string} | null>(null);
   const [trackingNotes, setTrackingNotes] = useState(null);
-
-  const arabicToGerman = {
-    'جارى مراجعة الطلب. رجاء التحقق لاحقاً':
-      'Der Antrag wird geprüft. Bitte überprüfen Sie später erneut.',
-    'وردت الموافقة. رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان':
-      'Die Genehmigung ist eingegangen. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen innerhalb der festgelegten Fristen oder senden Sie sie per Einschreiben mit einem ausreichend frankierten Rückumschlag und Ihrer Adresse.',
-    'لم ترد الموافقة':
-      'Die Genehmigung wurde nicht erteilt.',
-    'مطلوب إستيفاء':
-      'Ergänzende Angaben erforderlich.',
-  };
 
   const generateRandomBarcode = async () => {
     const { data } = await supabase.from('visa_requests').select('barcode');
     const existing = new Set((data || []).map(d => d.barcode));
-
     let code;
     do {
       code = Math.floor(1000 + Math.random() * 9000).toString();
     } while (existing.has(code));
-
     setBarcode(code);
   };
 
   const stampAndDownloadPDF = async () => {
     if (!barcode) return;
-
     const url = '/Visa Application Form.pdf';
     const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer());
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -71,13 +108,10 @@ export default function VisaAppPage() {
       .maybeSingle();
 
     if (!data) {
-      setTrackingStatus(
-        'لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب\nIhr Antrag wurde noch nicht empfangen. Bitte überprüfen Sie den Versand.'
-      );
+      // Not received, show all translations
+      setTrackingStatus(getAllTranslations('لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب'));
     } else {
-      const arabic = data.status;
-      const german = arabicToGerman[arabic] || '';
-      setTrackingStatus(`${arabic}\n${german}`);
+      setTrackingStatus(getAllTranslations(data.status));
       setTrackingNotes(data.notes);
     }
   };
@@ -86,12 +120,12 @@ export default function VisaAppPage() {
     generateRandomBarcode();
   }, []);
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: {ar: string, de: string, en: string} | null) => {
     if (!status) return '';
-    if (status.includes('جارى مراجعة الطلب')) return 'text-yellow-500';
-    if (status.includes('وردت الموافقة')) return 'text-green-600';
-    if (status.includes('لم ترد الموافقة')) return 'text-red-600';
-    if (status.includes('مطلوب إستيفاء')) return 'text-orange-500';
+    if (status.ar.includes('جارى مراجعة الطلب')) return 'text-yellow-500';
+    if (status.ar.includes('وردت الموافقة')) return 'text-green-600';
+    if (status.ar.includes('لم ترد الموافقة')) return 'text-red-600';
+    if (status.ar.includes('مطلوب إستيفاء')) return 'text-orange-500';
     return 'text-blue-700';
   };
 
@@ -243,15 +277,19 @@ export default function VisaAppPage() {
 
             {trackingStatus && (
               <div className="visa-status-box">
-                {trackingStatus.split('\n').map((line, idx) => (
-                  <div
-                    key={idx}
-                    className={`visa-status-line ${getStatusColor(trackingStatus)}`}
-                    dir="ltr"
-                  >
-                    {line}
+                <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="rtl">
+                  {trackingStatus.ar}
+                </div>
+                {trackingStatus.de && (
+                  <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="ltr" style={{fontSize:'1.3rem',marginTop:'0.5em'}}>
+                    {trackingStatus.de}
                   </div>
-                ))}
+                )}
+                {trackingStatus.en && (
+                  <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="ltr" style={{fontSize:'1.15rem',marginTop:'0.3em', color:'#326b7c'}}>
+                    {trackingStatus.en}
+                  </div>
+                )}
                 {trackingNotes && (
                   <div className="visa-note">
                     <div dir="ltr"><b>ملاحظات:</b> {trackingNotes}</div>
