@@ -18,7 +18,7 @@ const statusTranslations: Record<string, { de: string; en: string }> = {
     de: 'Der Antrag wird geprüft. Bitte überprüfen Sie später erneut.',
     en: 'Application under review. Please check again later.',
   },
-  'وردت الموافقة. رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان': {
+  'وردت الموافقة، رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان': {
     de: 'Die Genehmigung ist eingegangen. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen innerhalb der festgelegten Fristen oder senden Sie sie per Einschreiben mit einem ausreichend frankierten Rückumschlag und Ihrer Adresse.',
     en: 'Approval received. Please bring your passport and required documents within the specified deadlines or send them by registered mail with a stamped return envelope and your address.',
   },
