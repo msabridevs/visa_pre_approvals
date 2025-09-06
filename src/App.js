@@ -75,7 +75,11 @@ export default function VisaAppPage() {
   useEffect(() => {
     // Always client-side, so safe for Vercel
     const generateRandomBarcode = async () => {
-      const { data } = await supabase.from('visa_requests').select('barcode');
+      const { data, error } = await supabase.from('visa_requests').select('barcode');
+      if (error) {
+        setBarcode('0000');
+        return;
+      }
       const existing = new Set((data || []).map((d: any) => d.barcode));
       let code: string;
       do {
@@ -109,6 +113,7 @@ export default function VisaAppPage() {
     link.href = URL.createObjectURL(blob);
     link.download = `Visa_Application_${barcode}.pdf`;
     link.click();
+    URL.revokeObjectURL(link.href); // Clean up
   };
 
   const trackStatus = async () => {
@@ -117,13 +122,13 @@ export default function VisaAppPage() {
 
     const cleanedInput = trackInput.trim().replace(/\s+/g, ''); // trim and remove spaces
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('visa_requests')
       .select('status, notes')
       .eq('barcode', cleanedInput)
       .maybeSingle();
 
-    if (!data) {
+    if (error || !data) {
       // Not received, show all translations
       setTrackingStatus(getAllTranslations('لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب'));
     } else {
@@ -269,7 +274,7 @@ export default function VisaAppPage() {
             <label className="visa-label" dir="ltr">رقم الطلب / Antragsnummer</label>
             <input
               value={trackInput}
-              onChange={e => setTrackInput(e.target.value.trim().replace(/\s+/g, ''))}
+              onChange={e => setTrackInput(e.target.value.replace(/\s+/g, ''))}
               placeholder="أدخل رقم الطلب هنا"
               className="visa-input"
               dir="ltr"
