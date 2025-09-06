@@ -112,10 +112,13 @@ export default function VisaAppPage() {
   const trackStatus = async () => {
     setTrackingStatus(null);
     setTrackingNotes(null);
+
+    const cleanedInput = trackInput.trim().replace(/\s+/g, ''); // trim and remove spaces
+
     const { data } = await supabase
       .from('visa_requests')
       .select('status, notes')
-      .eq('barcode', trackInput)
+      .eq('barcode', cleanedInput)
       .maybeSingle();
 
     if (!data) {
@@ -264,7 +267,7 @@ export default function VisaAppPage() {
             <label className="visa-label" dir="ltr">رقم الطلب / Antragsnummer</label>
             <input
               value={trackInput}
-              onChange={e => setTrackInput(e.target.value)}
+              onChange={e => setTrackInput(e.target.value.trim().replace(/\s+/g, ''))}
               placeholder="أدخل رقم الطلب هنا"
               className="visa-input"
               dir="ltr"
