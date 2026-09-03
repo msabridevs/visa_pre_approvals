@@ -1,9 +1,6 @@
-// src/App.js
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-
-// Create React App is fully client-side, so hooks are fine here.
 
 const supabase = createClient(
   'https://rbsrverouylthjdbrxgd.supabase.co',
@@ -12,51 +9,51 @@ const supabase = createClient(
 
 const statusTranslations = {
   'جارى مراجعة الطلب. رجاء التحقق لاحقاً': {
-    de: 'Der Antrag wird geprüft. Bitte überprüfen Sie später erneut.',
-    en: 'Application under review. Please check again later.',
+    de: 'Ihr Antrag wird derzeit geprüft. Bitte versuchen Sie es später erneut.',
+    ar: 'طلبكم قيد المراجعة حاليًا. يُرجى التحقق مرة أخرى لاحقًا.',
   },
-  // Include both versions (with/without Arabic comma) to be safe
   'وردت الموافقة، رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان': {
-    de: 'Die Genehmigung ist eingegangen. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen innerhalb der festgelegten Fristen oder senden Sie sie per Einschreiben mit einem ausreichend frankierten Rückumschlag und Ihrer Adresse.',
-    en: 'Approval received. Please bring your passport and required documents within the specified deadlines or send them by registered mail with a stamped return envelope and your address.',
+    de: 'Die Genehmigung wurde erteilt. Bitte reichen Sie Ihren Reisepass und die erforderlichen Unterlagen während der festgelegten Zeiten persönlich ein oder senden Sie diese per Einschreiben zusammen mit einem ausreichend frankierten und adressierten Rückumschlag.',
+    ar: 'وردت الموافقة. يُرجى تقديم جواز السفر والمستندات المطلوبة شخصيًا خلال المواعيد المحددة، أو إرسالها بالبريد المسجل مع مظروف إعادة مستوفى الطوابع ومدوّن عليه العنوان.',
   },
   'وردت الموافقة. رجاء إحضار جـواز السفر والأوراق المطلوبة خلال المواعيد المحددة أو الإرسال بالبريد المسجل مع مظروف إعادة مستوفى الطوابع والعنوان': {
-    de: 'Die Genehmigung ist eingegangen. Bitte bringen Sie Ihren Reisepass und die erforderlichen Unterlagen innerhalb der festgelegten Fristen oder senden Sie sie per Einschreiben mit einem ausreichend frankierten Rückumschlag und Ihrer Adresse.',
-    en: 'Approval received. Please bring your passport and required documents within the specified deadlines or send them by registered mail with a stamped return envelope and your address.',
+    de: 'Die Genehmigung wurde erteilt. Bitte reichen Sie Ihren Reisepass und die erforderlichen Unterlagen während der festgelegten Zeiten persönlich ein oder senden Sie diese per Einschreiben zusammen mit einem ausreichend frankierten und adressierten Rückumschlag.',
+    ar: 'وردت الموافقة. يُرجى تقديم جواز السفر والمستندات المطلوبة شخصيًا خلال المواعيد المحددة، أو إرسالها بالبريد المسجل مع مظروف إعادة مستوفى الطوابع ومدوّن عليه العنوان.',
   },
   'لم ترد الموافقة': {
-    de: 'Die Genehmigung wurde nicht erteilt.',
-    en: 'Approval not granted.',
+    de: 'Ihr Visumantrag wurde abgelehnt. Leider wurde die für die Erteilung des Visums erforderliche Genehmigung nicht erteilt.',
+    ar: 'نأسف لإبلاغكم بأنه قد تم رفض طلب التأشيرة، لعدم ورود الموافقة اللازمة لإصدارها.',
   },
   'مطلوب إستيفاء': {
-    de: 'Ergänzende Angaben erforderlich.',
-    en: 'Additional information required.',
+    de: 'Für die weitere Bearbeitung sind zusätzliche Angaben oder Unterlagen erforderlich. Bitte beachten Sie die nachstehenden Hinweise.',
+    ar: 'يلزم استيفاء بيانات أو مستندات إضافية لمواصلة نظر الطلب. يُرجى الاطلاع على الملاحظات أدناه.',
   },
   'لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب': {
-    de: 'Ihr Antrag wurde noch nicht empfangen. Bitte überprüfen Sie den Versand.',
-    en: 'Your application has not been received yet. Please check your submission.',
+    de: 'Unter dieser Antragsnummer wurde noch kein Antrag registriert. Bitte überprüfen Sie die Nummer und vergewissern Sie sich, dass der Antrag abgesendet wurde.',
+    ar: 'لم يُسجَّل طلب بهذا الرقم حتى الآن. يُرجى التحقق من صحة الرقم والتأكد من إرسال الطلب.',
   },
 };
 
-function getAllTranslations(arabicStatus) {
-  if (statusTranslations[arabicStatus]) {
-    return {
-      ar: arabicStatus,
-      de: statusTranslations[arabicStatus].de,
-      en: statusTranslations[arabicStatus].en,
-    };
+function getTranslations(storedStatus) {
+  if (statusTranslations[storedStatus]) {
+    return statusTranslations[storedStatus];
   }
-  if (arabicStatus && arabicStatus.includes('\n')) {
-    const lines = arabicStatus.split('\n');
-    if (lines.length === 2 && statusTranslations[lines[0]]) {
+
+  if (storedStatus && storedStatus.includes('\n')) {
+    const [arabicStatus, germanStatus] = storedStatus.split('\n');
+
+    if (statusTranslations[arabicStatus]) {
       return {
-        ar: lines[0],
-        de: lines[1],
-        en: statusTranslations[lines[0]].en,
+        de: germanStatus || statusTranslations[arabicStatus].de,
+        ar: statusTranslations[arabicStatus].ar,
       };
     }
   }
-  return { ar: arabicStatus, de: '', en: '' };
+
+  return {
+    de: 'Der aktuelle Bearbeitungsstatus kann momentan nicht angezeigt werden. Bitte wenden Sie sich an das Konsulat.',
+    ar: 'يتعذر عرض حالة الطلب الحالية في الوقت الراهن. يُرجى التواصل مع القنصلية.',
+  };
 }
 
 export default function App() {
@@ -64,53 +61,108 @@ export default function App() {
   const [trackInput, setTrackInput] = useState('');
   const [trackingStatus, setTrackingStatus] = useState(null);
   const [trackingNotes, setTrackingNotes] = useState(null);
+  const [isTracking, setIsTracking] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
 
   useEffect(() => {
     const generateRandomBarcode = async () => {
-      const { data, error } = await supabase.from('visa_requests').select('barcode');
+      const { data, error } = await supabase
+        .from('visa_requests')
+        .select('barcode');
+
       if (error) {
         console.error(error);
-        // Fallback to random code even if DB read fails
       }
-      const existing = new Set((data || []).map((d) => d.barcode));
+
+      const existing = new Set(
+        (data || []).map((item) => item.barcode)
+      );
+
       let code;
+
       do {
         code = Math.floor(1000 + Math.random() * 9000).toString();
       } while (existing.has(code));
+
       setBarcode(code);
     };
+
     generateRandomBarcode();
   }, []);
 
   const stampAndDownloadPDF = async () => {
-    if (!barcode) return;
-    const url = '/Visa Application Form.pdf'; // Ensure this file exists in /public
-    const existingPdfBytes = await fetch(url).then((res) => res.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const page = pdfDoc.getPages()[0];
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    if (!barcode || isDownloading) return;
 
-    page.drawText(`Application #: ${barcode}`, {
-      x: 350,
-      y: 740,
-      size: 16,
-      font,
-      color: rgb(0, 0, 0),
-    });
+    setIsDownloading(true);
+    setDownloadError(false);
 
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `Visa_Application_${barcode}.pdf`;
-    link.click();
+    try {
+      const response = await fetch('/Visa Application Form.pdf');
+
+      if (!response.ok) {
+        throw new Error('PDF konnte nicht geladen werden.');
+      }
+
+      const pdfDoc = await PDFDocument.load(
+        await response.arrayBuffer()
+      );
+
+      const page = pdfDoc.getPages()[0];
+      const font = await pdfDoc.embedFont(
+        StandardFonts.Helvetica
+      );
+
+      page.drawText(`Antragsnummer: ${barcode}`, {
+        x: 350,
+        y: 740,
+        size: 16,
+        font,
+        color: rgb(0, 0, 0),
+      });
+
+      const pdfBytes = await pdfDoc.save();
+
+      const objectUrl = URL.createObjectURL(
+        new Blob([pdfBytes], {
+          type: 'application/pdf',
+        })
+      );
+
+      const link = document.createElement('a');
+
+      link.href = objectUrl;
+      link.download = `Visumantrag_${barcode}.pdf`;
+      link.click();
+
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error(error);
+      setDownloadError(true);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const trackStatus = async () => {
+    const cleanedInput = trackInput
+      .replace(/\D/g, '')
+      .slice(0, 4);
+
     setTrackingStatus(null);
     setTrackingNotes(null);
 
-    const cleanedInput = trackInput.trim().replace(/\s+/g, ''); // spaces don't matter
+    if (cleanedInput.length !== 4) {
+      setTrackingStatus({
+        de: 'Bitte geben Sie eine gültige vierstellige Antragsnummer ein.',
+        ar: 'يُرجى إدخال رقم طلب صحيح مكوّن من أربعة أرقام.',
+        type: 'invalid',
+      });
+
+      return;
+    }
+
+    setIsTracking(true);
 
     const { data, error } = await supabase
       .from('visa_requests')
@@ -118,213 +170,558 @@ export default function App() {
       .eq('barcode', cleanedInput)
       .maybeSingle();
 
+    setIsTracking(false);
+
     if (error || !data) {
-      setTrackingStatus(
-        getAllTranslations('لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب')
-      );
-    } else {
-      setTrackingStatus(getAllTranslations(data.status));
-      setTrackingNotes(data.notes);
+      setTrackingStatus({
+        ...getTranslations(
+          'لم يتم إستلام طلبكم حتى الآن. رجاء التحقق من إرسال الطلب'
+        ),
+        type: 'not-found',
+      });
+
+      return;
     }
+
+    setTrackingStatus({
+      ...getTranslations(data.status),
+      source: data.status,
+    });
+
+    setTrackingNotes(data.notes);
   };
 
-  const getStatusColor = (status) => {
-    if (!status) return '';
-    if (status.ar.includes('جارى مراجعة الطلب')) return 'text-yellow-500';
-    if (status.ar.includes('وردت الموافقة')) return 'text-green-600';
-    if (status.ar.includes('لم ترد الموافقة')) return 'text-red-600';
-    if (status.ar.includes('مطلوب إستيفاء')) return 'text-orange-500';
-    return 'text-blue-700';
+  const getStatusClass = (status) => {
+    const source = status?.source || '';
+
+    if (source.includes('جارى مراجعة الطلب')) {
+      return 'status-review';
+    }
+
+    if (source.includes('وردت الموافقة')) {
+      return 'status-approved';
+    }
+
+    if (source.includes('لم ترد الموافقة')) {
+      return 'status-rejected';
+    }
+
+    if (source.includes('مطلوب إستيفاء')) {
+      return 'status-required';
+    }
+
+    return 'status-info';
   };
 
   return (
     <>
-      {/* Optional: move this to public/index.html for best practice */}
       <link
-        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700;800&display=swap"
         rel="stylesheet"
       />
+
       <style>{`
-        .visa-main-font {
-          font-family: 'Cairo', 'Tajawal', 'Segoe UI', 'Arial', sans-serif;
+        * {
+          box-sizing: border-box;
         }
-        .visa-btn {
-          transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+
+        body {
+          margin: 0;
+        }
+
+        .visa-page {
+          min-height: 100vh;
+          padding: 32px 18px;
+          background: linear-gradient(
+            145deg,
+            #eef5fb 0%,
+            #f8fafc 55%,
+            #eef8f2 100%
+          );
+          font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+          color: #172033;
+        }
+
+        .visa-container {
+          width: 100%;
+          max-width: 790px;
+          margin: 0 auto;
+        }
+
+        .visa-header {
+          margin-bottom: 28px;
+        }
+
+        .visa-header h1 {
+          margin: 0;
+          color: #084f91;
+          font-size: clamp(2rem, 5vw, 3rem);
+          font-weight: 800;
+        }
+
+        .visa-header .ar-title {
+          margin-top: 7px;
+          font-family: 'Cairo', sans-serif;
+          color: #5e6d7d;
+          font-size: 1.3rem;
+          font-weight: 600;
+        }
+
+        .visa-card {
+          background: #ffffff;
+          border: 1px solid #dce5ee;
+          border-radius: 20px;
+          padding: clamp(22px, 5vw, 36px);
+          box-shadow: 0 10px 30px rgba(36, 62, 89, 0.08);
+        }
+
+        .visa-card + .visa-card {
+          margin-top: 28px;
+        }
+
+        .section-heading {
+          display: flex;
+          align-items: flex-start;
+          gap: 15px;
+          margin-bottom: 24px;
+        }
+
+        .section-number {
+          flex: 0 0 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          color: #ffffff;
+          background: #0a5dab;
+          font-size: 1.15rem;
+          font-weight: 800;
+        }
+
+        .tracking-card .section-number {
+          background: #197a48;
+        }
+
+        .section-heading h2 {
+          margin: 0;
+          font-size: 1.5rem;
+          color: #153e65;
+        }
+
+        .tracking-card .section-heading h2 {
+          color: #17633e;
+        }
+
+        .arabic-secondary {
+          margin-top: 5px;
+          font-family: 'Cairo', sans-serif;
+          direction: rtl;
+          text-align: left;
+          color: #647182;
+          font-size: 1rem;
+          line-height: 1.8;
+        }
+
+        .application-number {
+          margin-bottom: 20px;
+          padding: 15px 18px;
+          background: #eef6fd;
+          border: 1px solid #c9e0f4;
+          border-radius: 12px;
+        }
+
+        .application-number strong {
+          display: block;
+          margin-top: 3px;
+          color: #084f91;
+          font-size: 1.75rem;
+        }
+
+        .visa-label {
+          display: block;
+          margin-bottom: 9px;
+          color: #26384a;
+          font-size: 1rem;
           font-weight: 700;
-          letter-spacing: 0.5px;
-          border-radius: 16px;
-          box-shadow: 0 3px 18px #0A5DAB18;
-          outline: none;
-          border: none;
         }
-        .visa-btn-blue {
-          background: linear-gradient(90deg, #0A5DAB 60%, #36a3e3 100%);
-          color: #fff;
+
+        .visa-label-ar {
+          margin-left: 7px;
+          font-family: 'Cairo', sans-serif;
+          color: #728092;
+          font-size: 0.9rem;
+          font-weight: 600;
         }
-        .visa-btn-blue:hover {
-          background: linear-gradient(90deg, #08508e 60%, #2696d1 100%);
-        }
-        .visa-btn-green {
-          background: linear-gradient(90deg, #26A65B 70%, #6de49b 100%);
-          color: #fff;
-        }
-        .visa-btn-green:hover {
-          background: linear-gradient(90deg, #1d7d44 70%, #34b86c 100%);
-        }
-        .visa-section-title {
-          font-size: 2.7rem;
-          font-weight: 900;
-          color: #0A5DAB;
-          margin-bottom: 0.3em;
-          letter-spacing: 0.5px;
-        }
-        .visa-section-sub {
-          font-size: 1.4rem;
-          color: #444;
-          margin-bottom: 0.6em;
-        }
+
         .visa-input {
           width: 100%;
-          font-size: 2.1rem;
-          padding: 0.85em 1.1em;
-          border: 1.5px solid #b6bdd2;
-          border-radius: 14px;
-          background: #f6fafd;
-          color: #1D1D1D;
-          transition: border-color .2s;
-          margin-bottom: 0.25em;
+          padding: 17px 18px;
+          border: 2px solid #c8d3df;
+          border-radius: 12px;
+          background: #fbfdff;
+          color: #172033;
+          font-size: 1.2rem;
+          transition: 0.2s;
         }
+
         .visa-input:focus {
-          border-color: #0A5DAB;
+          border-color: #197a48;
           outline: none;
-          background: #fff;
+          box-shadow: 0 0 0 4px rgba(25, 122, 72, 0.1);
+          background: #ffffff;
         }
-        .visa-label {
-          font-size: 1.1rem;
-          color: #888;
-          margin-bottom: 0.2em;
+
+        .visa-input::placeholder {
+          color: #788595;
+          opacity: 1;
+        }
+
+        .input-help {
+          margin: 8px 0 19px;
+          color: #687789;
+          font-size: 0.88rem;
+          line-height: 1.55;
+        }
+
+        .input-help-ar {
           display: block;
+          font-family: 'Cairo', sans-serif;
+          direction: rtl;
+          text-align: left;
         }
-        .visa-status-box {
-          background: #f6faf7;
-          border-radius: 18px;
-          padding: 1.3em 1.5em;
-          box-shadow: 0 2px 14px #26A65B12;
-          margin-top: 2em;
+
+        .visa-btn {
+          width: 100%;
+          padding: 14px 20px;
+          border: 0;
+          border-radius: 12px;
+          color: #ffffff;
+          cursor: pointer;
+          font: inherit;
+          font-weight: 800;
+          transition: transform 0.15s, filter 0.2s;
         }
-        .visa-status-line {
-          font-size: 2.2rem;
-          font-weight: 700;
+
+        .visa-btn:hover:not(:disabled) {
+          filter: brightness(0.94);
+          transform: translateY(-1px);
         }
+
+        .visa-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .visa-btn-blue {
+          background: #0a5dab;
+        }
+
+        .visa-btn-green {
+          background: #197a48;
+        }
+
+        .btn-de {
+          display: block;
+          font-size: 1.05rem;
+        }
+
+        .btn-ar {
+          display: block;
+          margin-top: 2px;
+          font-family: 'Cairo', sans-serif;
+          font-size: 0.85rem;
+          font-weight: 600;
+          opacity: 0.9;
+        }
+
+        .status-box {
+          margin-top: 24px;
+          padding: 20px;
+          border-left: 6px solid;
+          border-radius: 14px;
+        }
+
+        .status-approved {
+          background: #edf9f1;
+          border-color: #198754;
+          color: #126638;
+        }
+
+        .status-rejected {
+          background: #fff1f1;
+          border-color: #c93636;
+          color: #9b2424;
+        }
+
+        .status-review {
+          background: #fff8df;
+          border-color: #d39c14;
+          color: #735408;
+        }
+
+        .status-required {
+          background: #fff3e8;
+          border-color: #dd7a24;
+          color: #89470d;
+        }
+
+        .status-info {
+          background: #eef6fd;
+          border-color: #0a5dab;
+          color: #164f7d;
+        }
+
+        .status-de {
+          font-size: 1.13rem;
+          font-weight: 800;
+          line-height: 1.55;
+        }
+
+        .status-ar {
+          margin-top: 9px;
+          padding-top: 9px;
+          border-top: 1px solid currentColor;
+          font-family: 'Cairo', sans-serif;
+          direction: rtl;
+          text-align: left;
+          font-size: 0.95rem;
+          font-weight: 600;
+          line-height: 1.8;
+          opacity: 0.88;
+        }
+
         .visa-note {
-          color: #555;
-          background: #eef0f7;
+          margin-top: 15px;
+          padding: 14px 16px;
+          background: rgba(255, 255, 255, 0.7);
           border-radius: 10px;
-          padding: 0.7em 1em;
-          font-size: 1.4rem;
-          margin-top: 1em;
+          color: #37475a;
+          line-height: 1.6;
         }
-        @media (max-width:600px) {
-          .visa-section-title {font-size:2rem}
-          .visa-section-sub {font-size:1.1rem}
-          .visa-input{font-size:1.2rem}
-          .visa-status-line{font-size:1.3rem}
+
+        .note-ar {
+          margin-left: 5px;
+          font-family: 'Cairo', sans-serif;
+        }
+
+        .error-message {
+          margin-top: 14px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          background: #fff1f1;
+          color: #a32929;
+          font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+          .visa-page {
+            padding: 20px 12px;
+          }
+
+          .visa-card {
+            border-radius: 16px;
+          }
+
+          .section-heading h2 {
+            font-size: 1.22rem;
+          }
+
+          .section-number {
+            flex-basis: 34px;
+            height: 34px;
+          }
+
+          .application-number strong {
+            font-size: 1.45rem;
+          }
         }
       `}</style>
 
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e9f3ff] via-[#f7fafc] to-[#e7f7ec] visa-main-font">
-        <div className="max-w-2xl w-full p-7 md:p-10 bg-white shadow-2xl rounded-2xl space-y-12 text-left">
+      <main className="visa-page">
+        <div className="visa-container">
+          <header className="visa-header">
+            <h1>Visumantragsformular</h1>
 
-          {/* Title */}
-          <div className="mb-3">
-            <div dir="ltr" className="visa-section-title">نموذج طلب تأشيرة</div>
-            <div dir="ltr" className="visa-section-sub">Visumantragsformular</div>
-          </div>
-
-          {/* Download Section */}
-          <div className="space-y-4">
-            <div className="text-2xl md:text-3xl font-bold text-blue-900">
-              <div dir="ltr">
-                تحميل النموذج برقم الطلب الخاص بك: <span className="text-blue-700">#{barcode}</span>
-              </div>
-              <div dir="ltr" className="text-lg text-blue-400 font-normal">Formular mit Ihrer Antragsnummer herunterladen</div>
+            <div className="ar-title" dir="rtl">
+              نموذج طلب تأشيرة
             </div>
+          </header>
+
+          <section
+            className="visa-card"
+            aria-labelledby="download-title"
+          >
+            <div className="section-heading">
+              <span className="section-number">1</span>
+
+              <div>
+                <h2 id="download-title">
+                  Visumantragsformular herunterladen
+                </h2>
+
+                <div className="arabic-secondary">
+                  تحميل نموذج طلب التأشيرة
+                </div>
+              </div>
+            </div>
+
+            <div className="application-number">
+              <span>Ihre persönliche Antragsnummer</span>
+
+              <strong>#{barcode || '····'}</strong>
+
+              <div className="arabic-secondary">
+                رقم الطلب الخاص بكم
+              </div>
+            </div>
+
             <button
               onClick={stampAndDownloadPDF}
-              className="visa-btn visa-btn-blue text-2xl md:text-2xl px-8 py-4"
-              style={{ minWidth: 180 }}
+              className="visa-btn visa-btn-blue"
               type="button"
+              disabled={!barcode || isDownloading}
             >
-              <div dir="ltr" className="font-bold">تحميل النموذج</div>
-              <div dir="ltr" className="text-base text-blue-100 font-normal">Formular herunterladen</div>
-            </button>
-          </div>
+              <span className="btn-de">
+                {isDownloading
+                  ? 'Formular wird vorbereitet …'
+                  : 'Formular herunterladen'}
+              </span>
 
-          {/* Tracking Section */}
-          <div className="space-y-6 border-t pt-8">
-            <div className="text-2xl md:text-3xl font-bold text-green-800 mb-2">
-              <div dir="ltr" className="mb-1">لتتبع حالة الطلب، الرجاء إدخال رقم الطلب (المكون من أربعة أرقام) بدون رمز الشباك</div>
-              <div dir="ltr" className="text-lg text-green-500 font-normal">Um den Antragsstatus zu verfolgen, geben Sie bitte die vierstellige Antragsnummer ohne das #-Zeichen ein</div>
+              <span className="btn-ar">
+                {isDownloading
+                  ? 'جارٍ إعداد النموذج…'
+                  : 'تحميل النموذج'}
+              </span>
+            </button>
+
+            {downloadError && (
+              <div className="error-message" role="alert">
+                <div>
+                  Das Formular konnte nicht heruntergeladen werden.
+                  Bitte versuchen Sie es erneut.
+                </div>
+
+                <div className="arabic-secondary">
+                  تعذّر تحميل النموذج. يُرجى المحاولة مرة أخرى.
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section
+            className="visa-card tracking-card"
+            aria-labelledby="tracking-title"
+          >
+            <div className="section-heading">
+              <span className="section-number">2</span>
+
+              <div>
+                <h2 id="tracking-title">
+                  Bearbeitungsstatus prüfen
+                </h2>
+
+                <div className="arabic-secondary">
+                  الاستعلام عن حالة الطلب
+                </div>
+              </div>
             </div>
-            <label className="visa-label" dir="ltr">رقم الطلب / Antragsnummer</label>
+
+            <label
+              className="visa-label"
+              htmlFor="application-number"
+            >
+              Antragsnummer
+
+              <span className="visa-label-ar">
+                رقم الطلب
+              </span>
+            </label>
+
             <input
+              id="application-number"
               value={trackInput}
-              onChange={(e) => setTrackInput(e.target.value.trim().replace(/\s+/g, ''))}
-              placeholder="أدخل رقم الطلب هنا"
+              onChange={(event) =>
+                setTrackInput(
+                  event.target.value
+                    .replace(/\D/g, '')
+                    .slice(0, 4)
+                )
+              }
+              onKeyDown={(event) =>
+                event.key === 'Enter' && trackStatus()
+              }
+              placeholder="Antragsnummer hier eingeben / أدخل رقم الطلب هنا"
               className="visa-input"
               dir="ltr"
               type="text"
               inputMode="numeric"
+              autoComplete="off"
+              maxLength={4}
             />
-            <div className="text-sm text-gray-400 pl-2" dir="ltr">
-              Barcode-Nummer hier eingeben
-            </div>
-            <div>
-              <button
-                onClick={trackStatus}
-                className="visa-btn visa-btn-green text-2xl px-8 py-4"
-                style={{ minWidth: 180 }}
-                type="button"
-              >
-                <div dir="ltr" className="font-bold">تتبع الحالة</div>
-                <div dir="ltr" className="text-base text-green-100 font-normal">Status verfolgen</div>
-              </button>
+
+            <div className="input-help">
+              Bitte geben Sie die vierstellige Antragsnummer ohne
+              das #-Zeichen ein.
+
+              <span className="input-help-ar">
+                يُرجى إدخال رقم الطلب المكوّن من أربعة أرقام دون
+                علامة #.
+              </span>
             </div>
 
+            <button
+              onClick={trackStatus}
+              className="visa-btn visa-btn-green"
+              type="button"
+              disabled={isTracking}
+            >
+              <span className="btn-de">
+                {isTracking
+                  ? 'Status wird geprüft …'
+                  : 'Status prüfen'}
+              </span>
+
+              <span className="btn-ar">
+                {isTracking
+                  ? 'جارٍ التحقق من الحالة…'
+                  : 'الاستعلام عن الحالة'}
+              </span>
+            </button>
+
             {trackingStatus && (
-              <div className="visa-status-box">
-                <div className={`visa-status-line ${getStatusColor(trackingStatus)}`} dir="rtl">
+              <div
+                className={`status-box ${getStatusClass(
+                  trackingStatus
+                )}`}
+                role="status"
+                aria-live="polite"
+              >
+                <div className="status-de" dir="ltr">
+                  {trackingStatus.de}
+                </div>
+
+                <div className="status-ar" dir="rtl">
                   {trackingStatus.ar}
                 </div>
-                {trackingStatus.de && (
-                  <div
-                    className={`visa-status-line ${getStatusColor(trackingStatus)}`}
-                    dir="ltr"
-                    style={{ fontSize: '1.3rem', marginTop: '0.5em' }}
-                  >
-                    {trackingStatus.de}
-                  </div>
-                )}
-                {trackingStatus.en && (
-                  <div
-                    className={`visa-status-line ${getStatusColor(trackingStatus)}`}
-                    dir="ltr"
-                    style={{ fontSize: '1.15rem', marginTop: '0.3em', color: '#326b7c' }}
-                  >
-                    {trackingStatus.en}
-                  </div>
-                )}
+
                 {trackingNotes && (
                   <div className="visa-note">
-                    <div dir="ltr"><b>ملاحظات:</b> {trackingNotes}</div>
-                    <div dir="ltr"><b>Hinweise:</b> {trackingNotes}</div>
+                    <strong>
+                      Hinweise
+                      <span className="note-ar">
+                        {' '}/ ملاحظات
+                      </span>
+                      :
+                    </strong>{' '}
+
+                    {trackingNotes}
                   </div>
                 )}
               </div>
             )}
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </>
   );
 }
