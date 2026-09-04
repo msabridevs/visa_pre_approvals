@@ -92,6 +92,9 @@ export default function App() {
   const stampAndDownloadPDF = async () => {
     if (!barcode || isDownloading) return;
 
+    const applicationNumber = barcode;
+
+    setBarcode(null);
     setIsDownloading(true);
     setDownloadError(false);
 
@@ -111,7 +114,7 @@ export default function App() {
         StandardFonts.Helvetica
       );
 
-      page.drawText(`Antragsnummer: ${barcode}`, {
+      page.drawText(`Antragsnummer: ${applicationNumber}`, {
         x: 50,
         y: 740,
         size: 16,
@@ -130,12 +133,13 @@ export default function App() {
       const link = document.createElement('a');
 
       link.href = objectUrl;
-      link.download = `Visumantrag_${barcode}.pdf`;
+      link.download = `Visumantrag_${applicationNumber}.pdf`;
       link.click();
 
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error(error);
+      setBarcode(applicationNumber);
       setDownloadError(true);
     } finally {
       setIsDownloading(false);
@@ -330,6 +334,7 @@ export default function App() {
 
         .application-number strong {
           display: block;
+          min-height: 34px;
           margin-top: 3px;
           color: #084f91;
           font-size: 1.75rem;
@@ -566,7 +571,9 @@ export default function App() {
             <div className="application-number">
               <span>Ihre persönliche Antragsnummer</span>
 
-              <strong>#{barcode || '····'}</strong>
+              <strong>
+                {barcode ? `#${barcode}` : ''}
+              </strong>
 
               <div className="arabic-secondary">
                 رقم الطلب الخاص بكم
