@@ -71,9 +71,7 @@ export default function App() {
         .from('visa_requests')
         .select('barcode');
 
-      if (error) {
-        console.error(error);
-      }
+      if (error) console.error(error);
 
       const existing = new Set(
         (data || []).map((item) => item.barcode)
@@ -114,7 +112,7 @@ export default function App() {
       );
 
       page.drawText(`Antragsnummer: ${barcode}`, {
-        x: 350,
+        x: 50,
         y: 740,
         size: 16,
         font,
