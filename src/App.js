@@ -56,6 +56,26 @@ function getTranslations(storedStatus) {
   };
 }
 
+async function generateUniqueBarcode() {
+  const { data, error } = await supabase
+    .from('visa_requests')
+    .select('barcode');
+
+  if (error) console.error(error);
+
+  const existing = new Set(
+    (data || []).map((item) => item.barcode)
+  );
+
+  let code;
+
+  do {
+    code = Math.floor(1000 + Math.random() * 9000).toString();
+  } while (existing.has(code));
+
+  return code;
+}
+
 export default function App() {
   const [barcode, setBarcode] = useState(null);
   const [trackInput, setTrackInput] = useState('');
@@ -66,27 +86,7 @@ export default function App() {
   const [downloadError, setDownloadError] = useState(false);
 
   useEffect(() => {
-    const generateRandomBarcode = async () => {
-      const { data, error } = await supabase
-        .from('visa_requests')
-        .select('barcode');
-
-      if (error) console.error(error);
-
-      const existing = new Set(
-        (data || []).map((item) => item.barcode)
-      );
-
-      let code;
-
-      do {
-        code = Math.floor(1000 + Math.random() * 9000).toString();
-      } while (existing.has(code));
-
-      setBarcode(code);
-    };
-
-    generateRandomBarcode();
+    generateUniqueBarcode().then(setBarcode);
   }, []);
 
   const stampAndDownloadPDF = async () => {
@@ -126,7 +126,7 @@ export default function App() {
 
       const objectUrl = URL.createObjectURL(
         new Blob([pdfBytes], {
-          type: 'application/pdf',
+          type: 'application/octet-stream',
         })
       );
 
@@ -134,9 +134,18 @@ export default function App() {
 
       link.href = objectUrl;
       link.download = `Visumantrag_${applicationNumber}.pdf`;
-      link.click();
+      link.style.display = 'none';
 
-      URL.revokeObjectURL(objectUrl);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 1000);
+
+      const nextBarcode = await generateUniqueBarcode();
+      setBarcode(nextBarcode);
     } catch (error) {
       console.error(error);
       setBarcode(applicationNumber);
